@@ -2,17 +2,19 @@ from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.db import models
 
+MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024
+ALLOWED_FILE_EXTENSIONS = ['txt', 'pdf', 'png', 'jpg', 'jpeg']
+
 
 def validate_file_size(file):
-    max_size = 5 * 1024 * 1024
-    if file.size > max_size:
+    if file.size > MAX_FILE_SIZE_BYTES:
         raise ValidationError('File size must be 5MB or less.')
 
 
 class UploadedFile(models.Model):
     file = models.FileField(
         upload_to='uploads/',
-        validators=[FileExtensionValidator(['txt', 'pdf', 'png', 'jpg', 'jpeg']), validate_file_size],
+        validators=[FileExtensionValidator(ALLOWED_FILE_EXTENSIONS), validate_file_size],
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
