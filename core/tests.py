@@ -20,3 +20,11 @@ class HomeViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(UploadedFile.objects.count(), 1)
         self.assertContains(response, 'File saved')
+
+    def test_invalid_extension_is_rejected(self):
+        file = SimpleUploadedFile('malware.exe', b'not allowed')
+
+        response = self.client.post(reverse('home'), {'file': file})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(UploadedFile.objects.count(), 0)
