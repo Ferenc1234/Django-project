@@ -8,7 +8,7 @@ ALLOWED_FILE_EXTENSIONS = ['txt', 'pdf', 'png', 'jpg', 'jpeg']
 
 def validate_file_size(file):
     if file.size > MAX_FILE_SIZE_BYTES:
-        raise ValidationError('File size must be 5MB or less.')
+        raise ValidationError('File size exceeds the maximum allowed size of 5MB.')
 
 
 class UploadedFile(models.Model):
