@@ -28,3 +28,11 @@ class HomeViewTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(UploadedFile.objects.count(), 0)
+
+    def test_oversized_file_is_rejected(self):
+        file = SimpleUploadedFile('big.txt', b'a' * (5 * 1024 * 1024 + 1))
+
+        response = self.client.post(reverse('home'), {'file': file})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(UploadedFile.objects.count(), 0)
