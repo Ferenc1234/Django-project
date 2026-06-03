@@ -1,0 +1,15 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+  <section class="panel" style="max-width: 520px; margin: 0 auto;">
+    <h1 style="margin-top: 0;">Login</h1>
+    <p class="muted">Authentication is required to add or edit filaments and spools.</p>
+    <form method="post" class="stack">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button class="button primary" type="submit">Sign in</button>
+    </form>
+  </section>
+{% endblock %}

@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Filament database{% endblock %}</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #0f172a;
+        --bg-soft: #111827;
+        --card: rgba(15, 23, 42, 0.72);
+        --card-border: rgba(148, 163, 184, 0.2);
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --accent: #22c55e;
+        --accent-2: #38bdf8;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --surface: #0b1120;
+        --shadow: 0 20px 45px rgba(2, 6, 23, 0.35);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "Trebuchet MS", "Lucida Sans Unicode", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 32%),
+          radial-gradient(circle at top right, rgba(34, 197, 94, 0.16), transparent 28%),
+          linear-gradient(180deg, #030712 0%, #0f172a 40%, #111827 100%);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      a { color: inherit; }
+
+      .shell {
+        width: min(1200px, calc(100% - 2rem));
+        margin: 0 auto;
+        padding: 1.25rem 0 3rem;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem 1.25rem;
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        background: rgba(15, 23, 42, 0.72);
+        backdrop-filter: blur(16px);
+        box-shadow: var(--shadow);
+      }
+
+      .brand {
+        font-weight: 700;
+        font-size: 1.1rem;
+        letter-spacing: 0.04em;
+      }
+
+      .nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        align-items: center;
+      }
+
+      .nav a,
+      .nav button,
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        border: 1px solid var(--card-border);
+        background: rgba(15, 23, 42, 0.7);
+        color: var(--text);
+        text-decoration: none;
+        padding: 0.7rem 1rem;
+        border-radius: 999px;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .button.primary,
+      .nav a.primary {
+        background: linear-gradient(135deg, var(--accent), #16a34a);
+        color: #03120a;
+        border-color: transparent;
+        font-weight: 700;
+      }
+
+      .button.secondary,
+      .nav a.secondary {
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(37, 99, 235, 0.28));
+      }
+
+      .message-list { display: grid; gap: 0.75rem; margin: 0 0 1rem; padding: 0; list-style: none; }
+
+      .message {
+        padding: 0.9rem 1rem;
+        border-radius: 16px;
+        background: rgba(15, 23, 42, 0.82);
+        border: 1px solid var(--card-border);
+      }
+
+      .message.success { border-color: rgba(34, 197, 94, 0.5); }
+      .message.error { border-color: rgba(239, 68, 68, 0.6); }
+
+      .page-grid {
+        display: grid;
+        gap: 1.25rem;
+      }
+
+      .panel {
+        border: 1px solid var(--card-border);
+        background: var(--card);
+        border-radius: 24px;
+        padding: 1.25rem;
+        backdrop-filter: blur(18px);
+        box-shadow: var(--shadow);
+      }
+
+      .muted { color: var(--muted); }
+      .stack { display: grid; gap: 0.9rem; }
+      .grid-2 { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-3 { display: grid; gap: 1rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+      @media (max-width: 900px) {
+        .topbar, .grid-2, .grid-3 { grid-template-columns: 1fr; flex-direction: column; align-items: flex-start; }
+      }
+
+      input, select, textarea {
+        width: 100%;
+        padding: 0.75rem 0.85rem;
+        border-radius: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        background: rgba(2, 6, 23, 0.45);
+        color: var(--text);
+      }
+
+      label { display: block; margin-bottom: 0.35rem; font-weight: 600; }
+      .field { display: grid; gap: 0.35rem; }
+
+      .catalog { display: grid; gap: 1rem; }
+
+      .filament-card {
+        padding: 1rem;
+        border-radius: 22px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(3, 7, 18, 0.82));
+      }
+
+      .card-head { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; flex-wrap: wrap; }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        background: rgba(15, 23, 42, 0.55);
+      }
+
+      .spools {
+        display: grid;
+        gap: 0.75rem;
+        margin-top: 1rem;
+      }
+
+      .spool {
+        border-radius: 18px;
+        padding: 0.9rem 1rem;
+        background: rgba(15, 23, 42, 0.58);
+        border: 1px solid rgba(148, 163, 184, 0.16);
+      }
+
+      .progress {
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.18);
+        overflow: hidden;
+        margin-top: 0.65rem;
+      }
+
+      .progress > span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--accent-2), var(--accent));
+      }
+
+      .status-full .progress > span { background: linear-gradient(90deg, #22c55e, #16a34a); }
+      .status-in_use .progress > span { background: linear-gradient(90deg, #38bdf8, #2563eb); }
+      .status-low .progress > span { background: linear-gradient(90deg, #f59e0b, #ea580c); }
+      .status-empty .progress > span { background: linear-gradient(90deg, #ef4444, #b91c1c); }
+      .status-ordered .progress > span { background: linear-gradient(90deg, #a855f7, #7c3aed); }
+
+      .actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+      .toolbar { display: flex; justify-content: space-between; gap: 1rem; align-items: center; flex-wrap: wrap; }
+      .filters form { display: grid; gap: 1rem; }
+      .filter-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div>
+          <div class="brand">Filament database</div>
+          <div class="muted">Shared inventory for 3D printer spools</div>
+        </div>
+        <nav class="nav">
+          <a href="{% url 'home' %}">Catalog</a>
+          {% if user.is_authenticated %}
+            <a class="primary" href="{% url 'filament_create' %}">Add filament</a>
+            <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Logout</button></form>
+          {% else %}
+            <a class="primary" href="{% url 'login' %}">Login</a>
+          {% endif %}
+        </nav>
+      </header>
+
+      {% if messages %}
+        <ul class="message-list">
+          {% for message in messages %}
+            <li class="message {{ message.tags }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </body>
+</html>

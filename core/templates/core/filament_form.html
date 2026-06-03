@@ -1,0 +1,29 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+  <section class="panel" style="max-width: 900px; margin: 0 auto;">
+    <h1 style="margin-top: 0;">{{ page_title }}</h1>
+    <form method="post" class="stack">
+      {% csrf_token %}
+      <div class="grid-2">
+        <div class="field">{{ form.manufacturer.label_tag }}{{ form.manufacturer }}</div>
+        <div class="field">{{ form.manufacturer_name.label_tag }}{{ form.manufacturer_name }}</div>
+        <div class="field">{{ form.product_name.label_tag }}{{ form.product_name }}</div>
+        <div class="field">{{ form.material.label_tag }}{{ form.material }}</div>
+        <div class="field">{{ form.color_mode.label_tag }}{{ form.color_mode }}</div>
+        <div class="field">{{ form.primary_color.label_tag }}{{ form.primary_color }}</div>
+        <div class="field">{{ form.secondary_color.label_tag }}{{ form.secondary_color }}</div>
+        <div class="field">{{ form.tertiary_color.label_tag }}{{ form.tertiary_color }}</div>
+      </div>
+      <div class="field">{{ form.gradient_description.label_tag }}{{ form.gradient_description }}</div>
+      <div class="field">{{ form.notes.label_tag }}{{ form.notes }}</div>
+      {{ form.non_field_errors }}
+      <div class="actions">
+        <button class="button primary" type="submit">Save</button>
+        <a class="button" href="{% url 'home' %}">Cancel</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

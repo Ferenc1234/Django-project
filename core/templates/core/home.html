@@ -1,15 +1,102 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>Hello World</title>
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      <input type="file" name="file" required>
-      <button type="submit">Upload</button>
-    </form>
-  </body>
-</html>
+{% extends 'core/base.html' %}
+
+{% block title %}Filament catalog{% endblock %}
+
+{% block content %}
+  <div class="page-grid">
+    <section class="panel toolbar">
+      <div>
+        <h1 style="margin: 0 0 0.35rem;">Filament catalog</h1>
+        <div class="muted">Browse every saved filament and its physical spools.</div>
+      </div>
+      {% if user.is_authenticated %}
+        <a class="button primary" href="{% url 'filament_create' %}">Add filament</a>
+      {% else %}
+        <a class="button secondary" href="{% url 'login' %}">Login to edit</a>
+      {% endif %}
+    </section>
+
+    <section class="panel filters">
+      <h2 style="margin-top: 0;">Filters</h2>
+      <form method="get">
+        <div class="grid-3">
+          <div class="field">{{ filter_form.manufacturer.label_tag }}{{ filter_form.manufacturer }}</div>
+          <div class="field">{{ filter_form.material.label_tag }}{{ filter_form.material }}</div>
+          <div class="field">{{ filter_form.color.label_tag }}{{ filter_form.color }}</div>
+          <div class="field">{{ filter_form.color_mode.label_tag }}{{ filter_form.color_mode }}</div>
+          <div class="field">{{ filter_form.spool_size.label_tag }}{{ filter_form.spool_size }}</div>
+          <div class="field">{{ filter_form.spool_status.label_tag }}{{ filter_form.spool_status }}</div>
+        </div>
+        <div class="filter-actions">
+          <button class="button primary" type="submit">Apply filters</button>
+          <a class="button" href="{% url 'home' %}">Reset</a>
+        </div>
+      </form>
+    </section>
+
+    <section class="catalog">
+      {% for filament in filaments %}
+        <article class="filament-card">
+          <div class="card-head">
+            <div>
+              <div class="badge">{{ filament.manufacturer.name }}</div>
+              <h3 style="margin: 0.5rem 0 0.25rem;">{{ filament.product_name }}</h3>
+              <div class="muted">{{ filament.material }} · {{ filament.get_color_mode_display }}</div>
+              <div style="margin-top: 0.5rem;">{{ filament.color_summary }}</div>
+            </div>
+            {% if user.is_authenticated %}
+              <div class="actions">
+                <a class="button" href="{% url 'filament_edit' filament.pk %}">Edit filament</a>
+                <a class="button primary" href="{% url 'spool_create' filament.pk %}">Add another spool</a>
+              </div>
+            {% endif %}
+          </div>
+
+          {% if filament.notes %}
+            <p class="muted" style="margin-bottom: 0;">{{ filament.notes }}</p>
+          {% endif %}
+
+          <div class="spools">
+            {% for spool in filament.spools.all %}
+              <div class="spool status-{{ spool.status }}">
+                <div class="toolbar">
+                  <div>
+                    <strong>{{ spool.spool_weight_kg }} kg spool</strong>
+                    <div class="muted">Status: {{ spool.get_status_display }}</div>
+                  </div>
+                  <div class="badge">{{ spool.remaining_summary }}</div>
+                </div>
+                <div class="progress" aria-label="Remaining spool level">
+                  <span style="width: {{ spool.remaining_percentage }}%;"></span>
+                </div>
+                <div class="muted" style="margin-top: 0.45rem;">{{ spool.remaining_weight_g }} g left of {{ spool.total_weight_g }} g</div>
+                {% if spool.notes %}
+                  <div class="muted" style="margin-top: 0.5rem;">{{ spool.notes }}</div>
+                {% endif %}
+                {% if user.is_authenticated %}
+                  <div class="actions">
+                    <a class="button" href="{% url 'spool_edit' spool.pk %}">Edit spool</a>
+                  </div>
+                {% endif %}
+              </div>
+            {% empty %}
+              <div class="spool">
+                <div class="muted">No spools recorded yet.</div>
+                {% if user.is_authenticated %}
+                  <div class="actions">
+                    <a class="button primary" href="{% url 'spool_create' filament.pk %}">Add first spool</a>
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </article>
+      {% empty %}
+        <section class="panel">
+          <h3 style="margin-top: 0;">No filaments match these filters.</h3>
+          <p class="muted">Clear the filters or add the first filament to start building the catalog.</p>
+        </section>
+      {% endfor %}
+    </section>
+  </div>
+{% endblock %}

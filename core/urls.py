@@ -1,7 +1,22 @@
+from django.contrib.auth import views as auth_views
 from django.urls import path
 
-from .views import home
+from .views import filament_create, filament_edit, home, spool_create, spool_edit
 
 urlpatterns = [
     path('', home, name='home'),
+    path(
+        'login/',
+        auth_views.LoginView.as_view(template_name='core/login.html'),
+        name='login',
+    ),
+    path(
+        'logout/',
+        auth_views.LogoutView.as_view(next_page='login'),
+        name='logout',
+    ),
+    path('filaments/new/', filament_create, name='filament_create'),
+    path('filaments/<int:pk>/edit/', filament_edit, name='filament_edit'),
+    path('filaments/<int:filament_id>/spools/new/', spool_create, name='spool_create'),
+    path('spools/<int:pk>/edit/', spool_edit, name='spool_edit'),
 ]
