@@ -84,6 +84,9 @@ class Filament(models.Model):
 
     @property
     def color_summary(self):
+        if self.color_mode == COLOR_MODE_GRADIENT:
+            return self.gradient_description or self.primary_color
+
         colors = [self.primary_color]
         if self.secondary_color:
             colors.append(self.secondary_color)
@@ -97,6 +100,13 @@ class Filament(models.Model):
 class Spool(models.Model):
     filament = models.ForeignKey(Filament, on_delete=models.CASCADE, related_name='spools')
     spool_weight_kg = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(0.01)])
+    price_per_spool = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        null=True,
+        blank=True,
+    )
     remaining_weight_kg = models.DecimalField(
         max_digits=5,
         decimal_places=2,

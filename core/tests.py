@@ -58,9 +58,17 @@ class CatalogTests(TestCase):
     def test_spool_progress_is_rendered(self):
         response = self.client.get(reverse('home'))
 
-        self.assertContains(response, 'style="width: 70%;"')
+        self.assertContains(response, 'style="width: 70%;')
         self.assertContains(response, '700 g left · 70%')
         self.assertContains(response, '700 g left of 1000 g')
+
+    def test_filament_detail_page_is_public(self):
+        response = self.client.get(reverse('filament_detail', kwargs={'pk': self.petg.pk}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'PLA Matte Black')
+        self.assertContains(response, 'Sunlu')
+        self.assertContains(response, 'Spools')
 
     def test_login_required_for_filament_creation(self):
         response = self.client.get(reverse('filament_create'))
@@ -96,7 +104,7 @@ class CatalogTests(TestCase):
         response = self.client.post(
             reverse('spool_create', kwargs={'filament_id': self.petg.pk}),
             {
-                'spool_weight_kg': '0.75',
+                'spool_weight_kg': '750',
                 'remaining_weight_kg': '',
                 'status': 'full',
                 'notes': 'New spare spool',
@@ -107,3 +115,46 @@ class CatalogTests(TestCase):
         self.assertEqual(Spool.objects.filter(filament=self.petg).count(), 2)
         new_spool = Spool.objects.filter(filament=self.petg, spool_weight_kg=Decimal('0.75')).latest('id')
         self.assertEqual(new_spool.remaining_weight_kg, Decimal('0.75'))
+
+    def test_quick_usage_subtracts_remaining_weight(self):
+        self.client.login(username='tester', password='secret12345')
+
+        response = self.client.post(
+            reverse('spool_quick_use', kwargs={'filament_id': self.petg.pk}),
+            {'grams_used': '200'},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.petg_spool.refresh_from_db()
+        self.assertEqual(self.petg_spool.remaining_weight_kg, Decimal('0.50'))
+
+    def test_quick_usage_deletes_spool_when_empty(self):
+        self.client.login(username='tester', password='secret12345')
+
+        response = self.client.post(
+            reverse('spool_quick_use', kwargs={'filament_id': self.petg.pk}),
+            {'grams_used': '700'},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Spool.objects.filter(pk=self.petg_spool.pk).exists())
+
+    def test_authenticated_user_can_edit_spool_with_gram_inputs(self):
+        self.client.login(username='tester', password='secret12345')
+
+        response = self.client.post(
+            reverse('spool_edit', kwargs={'pk': self.petg_spool.pk}),
+            {
+                'spool_weight_kg': '1000',
+                'price_per_spool': '24.90',
+                'remaining_weight_kg': '650',
+                'status': 'in_use',
+                'notes': 'Updated from edit form',
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.petg_spool.refresh_from_db()
+        self.assertEqual(self.petg_spool.spool_weight_kg, Decimal('1.00'))
+        self.assertEqual(self.petg_spool.remaining_weight_kg, Decimal('0.65'))
+        self.assertEqual(self.petg_spool.price_per_spool, Decimal('24.90'))

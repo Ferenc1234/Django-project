@@ -46,6 +46,7 @@ class FilamentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['color_mode'].choices = [('', 'Select a color mode')] + COLOR_MODE_CHOICES
+        self.fields['primary_color'].required = False
 
     def clean(self):
         cleaned_data = super().clean()
@@ -55,9 +56,13 @@ class FilamentForm(forms.ModelForm):
             raise ValidationError('Select an existing manufacturer or enter a new manufacturer name.')
 
         color_mode = cleaned_data.get('color_mode')
+        primary_color = (cleaned_data.get('primary_color') or '').strip()
         secondary_color = (cleaned_data.get('secondary_color') or '').strip()
         tertiary_color = (cleaned_data.get('tertiary_color') or '').strip()
         gradient_description = (cleaned_data.get('gradient_description') or '').strip()
+
+        if color_mode != 'gradient' and not primary_color:
+            self.add_error('primary_color', 'Add a primary color for this filament.')
 
         if color_mode == 'dual' and not secondary_color:
             self.add_error('secondary_color', 'Add a second color for dual-color filament.')
@@ -65,6 +70,8 @@ class FilamentForm(forms.ModelForm):
             self.add_error('tertiary_color', 'Add a third color for tri-color filament.')
         if color_mode == 'gradient' and not gradient_description:
             self.add_error('gradient_description', 'Describe the gradient effect for this filament.')
+        if color_mode == 'gradient' and not primary_color:
+            cleaned_data['primary_color'] = 'Gradient'
 
         return cleaned_data
 
@@ -83,23 +90,48 @@ class FilamentForm(forms.ModelForm):
 
 
 class SpoolForm(forms.ModelForm):
+    spool_weight_kg = forms.DecimalField(
+        max_digits=7,
+        decimal_places=0,
+        min_value=Decimal('1'),
+        label='Spool weight (g)',
+        help_text='Enter grams. Stored internally as kilograms.',
+    )
+    remaining_weight_kg = forms.DecimalField(
+        max_digits=7,
+        decimal_places=0,
+        min_value=Decimal('0'),
+        required=False,
+        label='Remaining weight (g)',
+        help_text='Enter grams. Stored internally as kilograms.',
+    )
+
     class Meta:
         model = Spool
-        fields = ['spool_weight_kg', 'remaining_weight_kg', 'status', 'notes']
+        fields = ['spool_weight_kg', 'price_per_spool', 'remaining_weight_kg', 'status', 'notes']
         widgets = {
             'notes': forms.Textarea(attrs={'rows': 3}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['remaining_weight_kg'].required = False
+        if not self.is_bound and self.instance and self.instance.pk and self.instance.spool_weight_kg is not None:
+            self.initial['spool_weight_kg'] = (self.instance.spool_weight_kg * Decimal('1000')).quantize(Decimal('1'))
+        if not self.is_bound and self.instance and self.instance.pk and self.instance.remaining_weight_kg is not None:
+            self.initial['remaining_weight_kg'] = (self.instance.remaining_weight_kg * Decimal('1000')).quantize(Decimal('1'))
         self.fields['status'].choices = [('', 'Select a spool status')] + SPOOL_STATUS_CHOICES
 
+    def clean_spool_weight_kg(self):
+        spool_weight_g = self.cleaned_data.get('spool_weight_kg')
+        if spool_weight_g in (None, ''):
+            return spool_weight_g
+        return Decimal(spool_weight_g) / Decimal('1000')
+
     def clean_remaining_weight_kg(self):
-        remaining_weight = self.cleaned_data.get('remaining_weight_kg')
-        if remaining_weight in (None, ''):
+        remaining_weight_g = self.cleaned_data.get('remaining_weight_kg')
+        if remaining_weight_g in (None, ''):
             return None
-        return remaining_weight
+        return Decimal(remaining_weight_g) / Decimal('1000')
 
 
 class CatalogFilterForm(forms.Form):

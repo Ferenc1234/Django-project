@@ -13,11 +13,39 @@
         <div class="field">{{ form.product_name.label_tag }}{{ form.product_name }}</div>
         <div class="field">{{ form.material.label_tag }}{{ form.material }}</div>
         <div class="field">{{ form.color_mode.label_tag }}{{ form.color_mode }}</div>
-        <div class="field">{{ form.primary_color.label_tag }}{{ form.primary_color }}</div>
-        <div class="field">{{ form.secondary_color.label_tag }}{{ form.secondary_color }}</div>
-        <div class="field">{{ form.tertiary_color.label_tag }}{{ form.tertiary_color }}</div>
       </div>
-      <div class="field">{{ form.gradient_description.label_tag }}{{ form.gradient_description }}</div>
+
+      <div class="grid-2" id="color-grid">
+        <div class="field" id="f-primary-color">
+          {{ form.primary_color.label_tag }}
+          <div class="color-input-wrap">
+            <input type="color" class="color-picker" data-target="id_primary_color" value="#ffffff" title="Pick a color">
+            {{ form.primary_color }}
+            <button type="button" class="color-name-btn" data-target="id_primary_color" title="Look up color name from hex">Name</button>
+          </div>
+          {{ form.primary_color.errors }}
+        </div>
+        <div class="field" id="f-secondary-color">
+          {{ form.secondary_color.label_tag }}
+          <div class="color-input-wrap">
+            <input type="color" class="color-picker" data-target="id_secondary_color" value="#ffffff" title="Pick a color">
+            {{ form.secondary_color }}
+            <button type="button" class="color-name-btn" data-target="id_secondary_color" title="Look up color name from hex">Name</button>
+          </div>
+          {{ form.secondary_color.errors }}
+        </div>
+        <div class="field" id="f-tertiary-color">
+          {{ form.tertiary_color.label_tag }}
+          <div class="color-input-wrap">
+            <input type="color" class="color-picker" data-target="id_tertiary_color" value="#ffffff" title="Pick a color">
+            {{ form.tertiary_color }}
+            <button type="button" class="color-name-btn" data-target="id_tertiary_color" title="Look up color name from hex">Name</button>
+          </div>
+          {{ form.tertiary_color.errors }}
+        </div>
+      </div>
+
+      <div class="field" id="f-gradient-description">{{ form.gradient_description.label_tag }}{{ form.gradient_description }}</div>
       <div class="field">{{ form.notes.label_tag }}{{ form.notes }}</div>
       {{ form.non_field_errors }}
       <div class="actions">
@@ -26,4 +54,98 @@
       </div>
     </form>
   </section>
+
+  <style>
+    .color-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .color-input-wrap input[type="color"] {
+      width: 44px !important;
+      height: 44px;
+      padding: 3px;
+      border-radius: 10px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .color-input-wrap input:not([type="color"]) {
+      flex: 1;
+      min-width: 0;
+    }
+    .color-name-btn {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(2, 6, 23, 0.45);
+      color: var(--muted);
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      font: inherit;
+    }
+    .color-name-btn:hover { color: var(--text); }
+  </style>
+
+  <script>
+    const colorModeSelect = document.getElementById('id_color_mode');
+    const fSecondary = document.getElementById('f-secondary-color');
+    const fTertiary = document.getElementById('f-tertiary-color');
+    const fGradient = document.getElementById('f-gradient-description');
+
+    function applyColorModeVisibility() {
+      const mode = colorModeSelect.value;
+      document.getElementById('f-primary-color').style.display = (mode === 'gradient') ? 'none' : '';
+      fSecondary.style.display = (mode === 'dual' || mode === 'tricolor') ? '' : 'none';
+      fTertiary.style.display = (mode === 'tricolor') ? '' : 'none';
+      fGradient.style.display = (mode === 'gradient') ? '' : 'none';
+    }
+
+    colorModeSelect.addEventListener('change', applyColorModeVisibility);
+    applyColorModeVisibility();
+
+    // Sync color pickers ↔ text inputs
+    document.querySelectorAll('.color-picker').forEach(picker => {
+      const textInput = document.getElementById(picker.dataset.target);
+      if (!textInput) return;
+
+      const val = textInput.value.trim();
+      if (/^#[0-9a-fA-F]{3,6}$/.test(val)) {
+        picker.value = val.length === 4
+          ? '#' + val[1] + val[1] + val[2] + val[2] + val[3] + val[3]
+          : val;
+      }
+
+      picker.addEventListener('input', () => {
+        textInput.value = picker.value;
+      });
+
+      textInput.addEventListener('input', () => {
+        const v = textInput.value.trim();
+        if (/^#[0-9a-fA-F]{6}$/.test(v)) picker.value = v;
+      });
+    });
+
+    // Color name lookup via The Color API
+    document.querySelectorAll('.color-name-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const textInput = document.getElementById(btn.dataset.target);
+        if (!textInput) return;
+        const hex = textInput.value.trim().replace(/^#/, '');
+        if (!/^[0-9a-fA-F]{3,6}$/.test(hex)) return;
+        btn.textContent = '…';
+        btn.disabled = true;
+        try {
+          const resp = await fetch(`https://www.thecolorapi.com/id?hex=${hex}&format=json`);
+          const data = await resp.json();
+          textInput.value = data.name.value;
+          const picker = document.querySelector(`.color-picker[data-target="${btn.dataset.target}"]`);
+          if (picker) picker.value = data.name.closest_named_hex;
+        } catch (_) {}
+        btn.textContent = 'Name';
+        btn.disabled = false;
+      });
+    });
+  </script>
 {% endblock %}
